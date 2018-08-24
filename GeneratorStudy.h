@@ -31,6 +31,7 @@
 #include "TPaveText.h"
 #include "TLatex.h"
 #include "TF1.h"
+#include "TRandom3.h"
 
 
 using namespace std;
@@ -48,4 +49,5 @@ double FRAC_OVER_2MEV[2]={1,0.0982};
 
 
 int main(int argc, char **argv);
-void analyze(ISOTOPE isotope);
+void Analyze(ISOTOPE isotope);
+double Smear(double energy, double smearCoefficient);
