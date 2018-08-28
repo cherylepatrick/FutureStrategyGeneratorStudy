@@ -17,10 +17,51 @@ int main(int argc, char **argv)
 void Analyze(ISOTOPE isotope)
 {
   TH1D *smeared2nu = makeSmearedHistogram(isotope,true);
+  TH1D *smeared0nu = FAKESmearedHistogram(isotope); // Replace with a real one once we have it
  // TH1D *smeared0nu = makeSmearedHistogram(isotope,false);
-
+  
+  // Plot the two together
+  TCanvas *c = new TCanvas (("totalEnergy_"+ISOTOPE_NAME[isotope]).c_str(),("Energy: "+ISOTOPE_NAME[isotope]).c_str(),900,600);
+  
+  smeared2nu->SetLineColor(kBlack);
+  smeared2nu->Draw("HIST");
+  smeared0nu->SetLineColor(kRed);
+  smeared0nu->Draw("HIST SAME");
+  
+  // Add a legend
+  TLegend* legend = new TLegend(0.75,0.8,0.9,0.9);
+  legend->AddEntry(smeared2nu, "2#nu#beta#beta", "l");
+  legend->AddEntry(smeared0nu,"0#nu#beta#beta", "l");
+  legend->Draw();
+  
+  // Save a PNG
+  string title="smearedComparison_"+ISOTOPE_NAME[isotope]+".png";
+  c->SaveAs(title.c_str());
+  delete c;
+  
   return ;
 
+}
+
+TH1D * FAKESmearedHistogram(ISOTOPE isotope) // Just put this here til we get the 0nu simulation
+{
+  
+  TH1D *hfake = new TH1D("hfake",(ISOTOPE_LATEX[isotope]).c_str(),300,2.1,Qbb[isotope]*1.1);
+  for (int i=0;i<10000;i++)
+  {
+    double fakeSmeared=Smear(Qbb[isotope],RESOLUTION_AT_1MeV);
+    hfake->Fill(fakeSmeared);
+  }
+  
+  TCanvas *c = new TCanvas (("totalEnergy_"+ISOTOPE_NAME[isotope]).c_str(),("Smeared energy: "+ISOTOPE_NAME[isotope]).c_str(),900,600);
+  hfake->Draw("HIST");
+  
+
+  // Save a PNG
+  string title="energySmear0nu_"+ISOTOPE_NAME[isotope]+".png";
+  c->SaveAs(title.c_str());
+  delete c;
+  return hfake;
 }
 
 TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu)
@@ -54,8 +95,8 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu)
   
   // Add a legend
   TLegend* legend = new TLegend(0.75,0.8,0.9,0.9);
-  legend->AddEntry(htrue, "True", "lep");
-  legend->AddEntry(hsmeared,"Smeared", "fl");
+  legend->AddEntry(htrue, "True", "l");
+  legend->AddEntry(hsmeared,"Smeared", "l");
   legend->Draw();
   
   // Save a PNG

@@ -47,9 +47,10 @@ double Qbb[2] = {2.99,3.368};
 string FILES2NU[2]={"","/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1_trimmed.root"};
 string FILES0NU[2]={"","/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1_trimmed.root"}; // No it doesn't
 double FRAC_OVER_2MEV[2]={1,0.0982};
-double RESOLUTION_AT_1MeV = 0.01; // 1% energy resolution at 1MeV
+double RESOLUTION_AT_1MeV = .01; // 1% energy resolution at 1MeV
 
 int main(int argc, char **argv);
 void Analyze(ISOTOPE isotope);
 double Smear(double energy, double smearCoefficient);
 TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu);
+TH1D * FAKESmearedHistogram(ISOTOPE isotope);
