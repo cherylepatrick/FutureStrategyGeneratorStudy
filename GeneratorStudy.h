@@ -45,12 +45,11 @@ string ISOTOPE_LATEX[2] = {"^{82}Se","^{150}Nd"};
 string ISOTOPE_NAME[2] = {"Se82","Nd150"};
 double Qbb[2] = {2.99,3.368};
 string FILES2NU[2]={"","/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1_trimmed.root"};
-string FILES0NU[2]={"","/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1_trimmed.root"}; // No it doesn't
+string FILES0NU[2]={""," /Users/cpatrick/uclnemo3/generatorstudy/nd150/nd150_0nu/1e5/run_1/Nd150_0nubb_1E6_flsim_1.root"};
 double FRAC_OVER_2MEV[2]={1,0.0982};
-double RESOLUTION_AT_1MeV = .01; // 1% energy resolution at 1MeV
 
 int main(int argc, char **argv);
-void Analyze(ISOTOPE isotope);
+void Analyze(ISOTOPE isotope, double resolutionAt1MeV);
 double Smear(double energy, double smearCoefficient);
-TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu);
-TH1D * FAKESmearedHistogram(ISOTOPE isotope);
+TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV);
+TH1D * FAKESmearedHistogram(ISOTOPE isotope, double resolutionAt1MeV);
