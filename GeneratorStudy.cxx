@@ -10,7 +10,8 @@ int main(int argc, char **argv)
   trand = new TRandom3();
   gStyle->SetOptStat(0);
   
-  Analyze(ND150, 0.01); // 1% energy resolution at 1MeV
+//  Analyze(ND150, 0.01); // 1% energy resolution at 1MeV
+  Analyze(SE82, 0.01); // 1% energy resolution at 1MeV
   return 0;
 }
 
