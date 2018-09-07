@@ -44,9 +44,9 @@ enum ISOTOPE  {SE82, ND150};
 string ISOTOPE_LATEX[2] = {"^{82}Se","^{150}Nd"};
 string ISOTOPE_NAME[2] = {"Se82","Nd150"};
 double Qbb[2] = {2.99,3.368};
-string FILES2NU[2]={"","/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1_trimmed.root"};
-string FILES0NU[2]={""," /Users/cpatrick/uclnemo3/generatorstudy/nd150/nd150_0nu/1e5/run_1/Nd150_0nubb_1E6_flsim_1.root"};
-double FRAC_OVER_2MEV[2]={1,0.0982};
+string FILES2NU[2]={"/Users/cpatrick/uclnemo3/generatorstudy/se82/2nubb/Se82_2nubb_1E8_flsim_2_trimmed.root","/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1_trimmed.root"};
+string FILES0NU[2]={"/Users/cpatrick/uclnemo3/generatorstudy/se82/0nubb/Se82_0nubb_1E8_flsim_1.root"," /Users/cpatrick/uclnemo3/generatorstudy/nd150/nd150_0nu/1e5/run_1/Nd150_0nubb_1E6_flsim_1.root"};
+double FRAC_OVER_2MEV[2]={0.043953,0.0982};
 
 int main(int argc, char **argv);
 void Analyze(ISOTOPE isotope, double resolutionAt1MeV);
