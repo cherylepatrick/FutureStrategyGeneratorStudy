@@ -117,3 +117,103 @@ double Smear(double energy, double smearCoefficient) // coefficient is fractiona
   return smeared;
   
 }
+
+double EstimateBackgroundEvents(double backgroundEfficiency, double isotopeMass, double molarMass, double halfLife)
+{
+  // Get the number of atoms you start with
+  double nSourceAtoms=AVOGADRO * (isotopeMass*1000)/molarMass; //Avogadro is grams
+  // The exponent is around 10^-20, it's too small for TMath::Exp to deal with
+  // Can we just go for a Taylor expansion for 1-e^-x where x is v small?
+  // 1( - e^-x) ~ x so...
+  double totalDecays=nSourceAtoms * (TMath::Log(2) * exposureYears/halfLife);
+  // Multiply by the efficiency and that is the amount of background events you expect to see
+  double events=totalDecays * backgroundEfficiency;
+  //cout<<totalDecays<<" backgrounds, of which we see "<<events<<endl;
+  return events;
+}
+
+// Adapted from James Mott's LimitCalculationFunctions, thanks James!
+double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_background, TH1D* h_data ) {
+  
+  // The idea is to calculate a confidence level with different signal strengths, to indicate
+  // that we have seen no signal when we pass it a background-only sample
+  // We will stop when we find the signal strength that gives the confidence level we pass in
+  // We will start with by scaling the signal up and down from what we think is a sensible answer
+  // One of these will give too high a confidence level, so we can start lowering it
+  // (If the 0nubb halflife were short, the expected events would be high, so if we saw none
+  // we would be very confident that the signal was not there)
+  // The other limit will give too low a confidence level so we must raise it
+  // (We expected so few events that we can't tell if there's signal or not, it would be hidden by background)
+  
+  
+
+  // These numbers are multipliers that will set us to 0.1 signal events and
+  // 1000 signal events respectively when we scale the plots
+  double low_bound = 0.1/h_signal->Integral();
+  double high_bound = 1000.0/h_signal->Integral();
+  
+  // Start with the small signal of 0.1 signal events for our low bound
+  // And 1k for the high bound
+  // We can't tell if we have signal or not with this tiny signal strength
+  TH1D* null_hyp_signal = (TH1D*) h_signal->Clone("null_hyp_signal"); null_hyp_signal->Scale(low_bound);
+  // We could easily tell if we had signal as big as this
+  TH1D* disc_hyp_signal = (TH1D*) h_signal->Clone("disc_hyp_signal"); disc_hyp_signal->Scale(high_bound);
+  
+  // Set up a data source using the small signal
+  // Data is the same as background, as we are setting a limit - assume we have no signal
+  TLimitDataSource* mydatasource = new TLimitDataSource(null_hyp_signal, h_background, h_data);
+  // Calculate a limit using CLs method to get a low-bound confidence level
+  TConfidenceLevel* myconfidence = TLimit::ComputeLimit(mydatasource, TLIMIT_EXPERIMENTS);
+  double low_bound_cl = myconfidence->CLs(); // This should be below our desired confidence level
+  delete mydatasource;
+  
+  // Now do the same with the scaled-up signal to get a high-bound confidence level
+  // We hope that our desired confidence level (input to function) is between these
+  mydatasource = new TLimitDataSource(disc_hyp_signal, h_background, h_data);
+  myconfidence = TLimit::ComputeLimit(mydatasource, TLIMIT_EXPERIMENTS);
+  double high_bound_cl = myconfidence->CLs(); // This should be above our desired confidence level
+  // Confidence level for signal is confidence for (signal+bg) / confidence for just background
+  delete mydatasource;
+  
+  // Now we are going to try different numbers of signal events, between those two bounds
+  double accuracy = 0.01;
+  double this_cl = 0;
+  double this_val = 0; // Number of events for this test - between the high and low bounds
+  
+  // Now we are going to close in those bounds until the difference between the
+  // low and high bound integrals is less than 1% of our initial signal integral, and
+  // the desired confidence level falls in between them
+  while  (fabs(high_bound - low_bound) * h_signal->Integral() > accuracy) {
+    // Pick a new number of events between the low and high bounds (nearer to the low) to try next
+    this_val = low_bound+(high_bound - low_bound)/3.;
+    TH1D* this_signal = (TH1D*) h_signal->Clone("test_signal");
+    this_signal->Scale(this_val);
+    
+    // Calculate a confidence level...
+    mydatasource = new TLimitDataSource(this_signal, h_background, h_data);
+    myconfidence = TLimit::ComputeLimit(mydatasource, TLIMIT_EXPERIMENTS);
+    this_cl = myconfidence->GetExpectedCLs_b(); // Get a new confidence level
+    // This is a different calculation than we did before!
+    // The documentation for TLimit does not say what it does, but my guess is
+    // This is(expected Confidence Level for the signal plus background hypothesis if there is only background)
+    // divided by (expected Confidence Level for the background only if there is only background.)
+    // So it's a confidence level for signal if there is only background
+    if (this_cl > ConfidenceLevel) {
+      low_bound = this_val; // If it's higher than our desired confidence level, move the low bound up
+      low_bound_cl = this_cl;
+    } else { // If it's lower than our desired level, we must move the high bound down
+      high_bound = this_val;
+      high_bound_cl = this_cl;
+    }
+    
+    delete mydatasource;
+    delete this_signal;
+    delete myconfidence;
+  }
+  // Tidy up
+  delete null_hyp_signal;
+  delete disc_hyp_signal;
+  
+  // Convert back to a number of signal events
+  return h_signal->Integral() * this_val;
+}
