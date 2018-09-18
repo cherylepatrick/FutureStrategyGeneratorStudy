@@ -38,7 +38,14 @@ void Analyze(ISOTOPE isotope, double resolutionAt1MeV)
   // Save a PNG
   string title="smearedComparison_"+ISOTOPE_NAME[isotope]+".png";
   c->SaveAs(title.c_str());
+  
+  // Calculate signal event limit
+  
+  double limit=ExpectedLimitSigEvts(0.1, smeared0nu, smeared2nu, smeared2nu ); // "Data" is background
+  cout<<"Limit is "<<limit<<endl;
+  
   delete c;
+
   return ;
 
 }
@@ -118,19 +125,19 @@ double Smear(double energy, double smearCoefficient) // coefficient is fractiona
   
 }
 
-double EstimateBackgroundEvents(double backgroundEfficiency, double isotopeMass, double molarMass, double halfLife)
-{
-  // Get the number of atoms you start with
-  double nSourceAtoms=AVOGADRO * (isotopeMass*1000)/molarMass; //Avogadro is grams
-  // The exponent is around 10^-20, it's too small for TMath::Exp to deal with
-  // Can we just go for a Taylor expansion for 1-e^-x where x is v small?
-  // 1( - e^-x) ~ x so...
-  double totalDecays=nSourceAtoms * (TMath::Log(2) * exposureYears/halfLife);
-  // Multiply by the efficiency and that is the amount of background events you expect to see
-  double events=totalDecays * backgroundEfficiency;
-  //cout<<totalDecays<<" backgrounds, of which we see "<<events<<endl;
-  return events;
-}
+//double EstimateBackgroundEvents(double backgroundEfficiency, double isotopeMass, double molarMass, double halfLife)
+//{
+//  // Get the number of atoms you start with
+//  double nSourceAtoms=AVOGADRO * (isotopeMass*1000)/molarMass; //Avogadro is grams
+//  // The exponent is around 10^-20, it's too small for TMath::Exp to deal with
+//  // Can we just go for a Taylor expansion for 1-e^-x where x is v small?
+//  // 1( - e^-x) ~ x so...
+//  double totalDecays=nSourceAtoms * (TMath::Log(2) * exposureYears/halfLife);
+//  // Multiply by the efficiency and that is the amount of background events you expect to see
+//  double events=totalDecays * backgroundEfficiency;
+//  //cout<<totalDecays<<" backgrounds, of which we see "<<events<<endl;
+//  return events;
+//}
 
 // Adapted from James Mott's LimitCalculationFunctions, thanks James!
 double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_background, TH1D* h_data ) {
@@ -178,13 +185,15 @@ double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_back
   // Now we are going to try different numbers of signal events, between those two bounds
   double accuracy = 0.01;
   double this_cl = 0;
-  double this_val = 0; // Number of events for this test - between the high and low bounds
+  double this_val = 0; // Scale factor for this test - between the high and low bounds
   
   // Now we are going to close in those bounds until the difference between the
   // low and high bound integrals is less than 1% of our initial signal integral, and
   // the desired confidence level falls in between them
   while  (fabs(high_bound - low_bound) * h_signal->Integral() > accuracy) {
-    // Pick a new number of events between the low and high bounds (nearer to the low) to try next
+    // Pick a new number scale factor between the low and high bounds (nearer to the low) to try next
+    // remember that low_bound and high_bound (and thus this_val) are not the number of events -
+    // they are a scale factor for the histogram i.e. number of events divided by original signal integral
     this_val = low_bound+(high_bound - low_bound)/3.;
     TH1D* this_signal = (TH1D*) h_signal->Clone("test_signal");
     this_signal->Scale(this_val);
@@ -205,7 +214,6 @@ double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_back
       high_bound = this_val;
       high_bound_cl = this_cl;
     }
-    
     delete mydatasource;
     delete this_signal;
     delete myconfidence;
@@ -214,6 +222,6 @@ double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_back
   delete null_hyp_signal;
   delete disc_hyp_signal;
   
-  // Convert back to a number of signal events
+  // Number of events is the scale factor * the original integral
   return h_signal->Integral() * this_val;
 }
