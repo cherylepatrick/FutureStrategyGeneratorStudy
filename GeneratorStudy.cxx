@@ -11,13 +11,14 @@ int main(int argc, char **argv)
   gStyle->SetOptStat(0);
   
 //  Analyze(ND150, 0.01); // 1% energy resolution at 1MeV
-  Analyze(SE82, 0.01); // 1% energy resolution at 1MeV
+  CalculateExposure(SE82, 0.01, DESIRED_SENSITIVITY); // 1% energy resolution at 1MeV, sensitivity desired
   return 0;
 }
 
-void Analyze(ISOTOPE isotope, double resolutionAt1MeV)
+double CalculateExposure(ISOTOPE isotope, double resolutionAt1MeV, double desiredSensitivity)
 {
   TH1D *smeared2nu = makeSmearedHistogram(isotope,true,resolutionAt1MeV);
+  Renormalize(isotope, smeared2nu);
   TH1D *smeared0nu = makeSmearedHistogram(isotope,false, resolutionAt1MeV);
   
   // Plot the two together
@@ -41,12 +42,19 @@ void Analyze(ISOTOPE isotope, double resolutionAt1MeV)
   
   // Calculate signal event limit
   
-  double limit=ExpectedLimitSigEvts(0.1, smeared0nu, smeared2nu, smeared2nu ); // "Data" is background
-  cout<<"Limit is "<<limit<<endl;
+  double signalEvents=ExpectedLimitSigEvts(0.1, smeared0nu, smeared2nu, smeared2nu ); // "Data" is background
+  cout<<signalEvents<<" signal events needed"<<endl;
+  
+  // From previous sensitivity calculations:
+  //double totalTLimitSensitivity= (zeroNuEfficiency/totalExpectedSignalEventLimit) * ((se82IsotopeMass*1000 * AVOGADRO)/se82MolarMass) * TMath::Log(2) * exposureYears;
+  
+  // Rearrange to get exposure in kg-years needed to reach desired sensitivity
+  double kgYears = desiredSensitivity *  signalEvents * ATOMIC_MASS[isotope]/ (AVOGADRO  * 1000. * TMath::Log(2)); // Increases with sensitivity and how many events are needed. Decreases with the number of atoms of isotope per kg. Log 2 is because we want a half-life not a decay constant.
+
+  cout<<ISOTOPE_NAME[isotope]<<": For sensitivity "<<desiredSensitivity<<" and resolution "<<resolutionAt1MeV<<" we need exposure of " <<kgYears<<" kg.years"<<endl;
   
   delete c;
-
-  return ;
+  return kgYears;
 
 }
 
@@ -224,4 +232,8 @@ double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_back
   
   // Number of events is the scale factor * the original integral
   return h_signal->Integral() * this_val;
+}
+void Renormalize(ISOTOPE isotope, TH1D* hist)
+{
+  
 }

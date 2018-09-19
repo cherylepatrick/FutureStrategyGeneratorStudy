@@ -40,19 +40,27 @@ using namespace std;
 string treeName="SimData";
 
 // 6 walls for the calorimeters, the order matters
+
 enum ISOTOPE  {SE82, ND150};
+// Everything for 82Se and 150Nd
 string ISOTOPE_LATEX[2] = {"^{82}Se","^{150}Nd"};
 string ISOTOPE_NAME[2] = {"Se82","Nd150"};
 double Qbb[2] = {2.99,3.368};
 string FILES2NU[2]={"/Users/cpatrick/uclnemo3/generatorstudy/se82/2nubb/Se82_2nubb_1E8_flsim_1.root","/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1_trimmed.root"};
 string FILES0NU[2]={"/Users/cpatrick/uclnemo3/generatorstudy/se82/0nubb/Se82_0nubb_1E8_flsim_1.root"," /Users/cpatrick/uclnemo3/generatorstudy/nd150/nd150_0nu/1e5/run_1/Nd150_0nubb_1E6_flsim_1.root"};
 double FRAC_OVER_2MEV[2]={1,0.0982};
+int ATOMIC_MASS[2]={82,150}; //Selenium 82, Neodymium 150
+double HALFLIFE2NU[2]={10.07e19,9.1e18}; // 2nubb halflife in years
 int TLIMIT_EXPERIMENTS=50000; // Number of pesudoexperiments to run for limit calculation
+double DESIRED_CONFIDENCE=0.1; // 0.1 -> 90% confidence level
+double DESIRED_SENSITIVITY=1.e28; // How long do we need to run to reach this 0nubb halflife sensitivity (years)?
+double AVOGADRO = 6.022140e23;
 
 int main(int argc, char **argv);
-void Analyze(ISOTOPE isotope, double resolutionAt1MeV);
+double CalculateExposure(ISOTOPE isotope, double resolutionAt1MeV, double desiredSensitivity);
 double Smear(double energy, double smearCoefficient);
 TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV);
 TH1D * FAKESmearedHistogram(ISOTOPE isotope, double resolutionAt1MeV);
 //double EstimateBackgroundEvents(double backgroundEfficiency, double isotopeMass, double molarMass, double halfLife);
 double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_background, TH1D* h_data );
+void Renormalize(ISOTOPE isotope, TH1D* hist);
