@@ -11,14 +11,18 @@ int main(int argc, char **argv)
   gStyle->SetOptStat(0);
   
 //  Analyze(ND150, 0.01); // 1% energy resolution at 1MeV
-  CalculateExposure(SE82, 0.01, DESIRED_SENSITIVITY); // 1% energy resolution at 1MeV, sensitivity desired
+  cout<<"82Se, LEGEND halflife of "<<SENSITIVITY_LEGEND_Se<<" years"<<endl;
+  double at5=CalculateExposure(SE82, 0.05, SENSITIVITY_LEGEND_Se); // 1% energy resolution at 1MeV, sensitivity desired
+  double at3=CalculateExposure(SE82, 0.03, SENSITIVITY_LEGEND_Se); // 1% energy resolution at 1MeV, sensitivity desired
+
+  double at1=CalculateExposure(SE82, 0.01, SENSITIVITY_LEGEND_Se); // 10% energy resolution at 1MeV
+  cout<<"1% resolution: "<<at1<<" 3%: "<<at3<<" 5% resolution: "<<at5<<endl;
   return 0;
 }
 
 double CalculateExposure(ISOTOPE isotope, double resolutionAt1MeV, double desiredSensitivity)
 {
   TH1D *smeared2nu = makeSmearedHistogram(isotope,true,resolutionAt1MeV);
-  Renormalize(isotope, smeared2nu);
   TH1D *smeared0nu = makeSmearedHistogram(isotope,false, resolutionAt1MeV);
   
   // Plot the two together
@@ -39,17 +43,17 @@ double CalculateExposure(ISOTOPE isotope, double resolutionAt1MeV, double desire
   // Save a PNG
   string title="smearedComparison_"+ISOTOPE_NAME[isotope]+".png";
   c->SaveAs(title.c_str());
-  
+
   // Calculate signal event limit
   
-  double signalEvents=ExpectedLimitSigEvts(0.1, smeared0nu, smeared2nu, smeared2nu ); // "Data" is background
+  double signalEvents=ExpectedLimitSigEvts(DESIRED_CONFIDENCE, smeared0nu, smeared2nu, smeared2nu ); // "Data" is background
   cout<<signalEvents<<" signal events needed"<<endl;
   
   // From previous sensitivity calculations:
   //double totalTLimitSensitivity= (zeroNuEfficiency/totalExpectedSignalEventLimit) * ((se82IsotopeMass*1000 * AVOGADRO)/se82MolarMass) * TMath::Log(2) * exposureYears;
   
   // Rearrange to get exposure in kg-years needed to reach desired sensitivity
-  double kgYears = desiredSensitivity *  signalEvents * ATOMIC_MASS[isotope]/ (AVOGADRO  * 1000. * TMath::Log(2)); // Increases with sensitivity and how many events are needed. Decreases with the number of atoms of isotope per kg. Log 2 is because we want a half-life not a decay constant.
+  double kgYears = desiredSensitivity *  signalEvents * ATOMIC_MASS[isotope]/ (AVOGADRO  * 1000. * TMath::Log(2)); // Increases with sensitivity and how many events are needed. Decreases with the number of atoms of isotope per kg. Log 2 is because we want a half-life not a decay constant. 1000 is because a mole of material is (atomic mass in grams)
 
   cout<<ISOTOPE_NAME[isotope]<<": For sensitivity "<<desiredSensitivity<<" and resolution "<<resolutionAt1MeV<<" we need exposure of " <<kgYears<<" kg.years"<<endl;
   
@@ -62,7 +66,7 @@ TH1D * FAKESmearedHistogram(ISOTOPE isotope, double resolutionAt1MeV) // Just pu
 {
   
   TH1D *hfake = new TH1D("hfake",(ISOTOPE_LATEX[isotope]).c_str(),300,2.1,Qbb[isotope]*1.1);
-  for (int i=0;i<10000;i++)
+  for (int i=0;i<100000;i++)
   {
     double fakeSmeared=Smear(Qbb[isotope],resolutionAt1MeV);
     hfake->Fill(fakeSmeared);
@@ -94,7 +98,8 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV
   // Loop the entries
   int nEntries = tree->GetEntries();
 
-  for (int i=0;i<nEntries;i++)
+//  for (int i=0;i<nEntries;i++)
+  for (int i=0;i<200000;i++) // Just to make it run faster
   {
     tree->GetEntry(i);
     double totalEnergy=electronEnergy->at(0)+electronEnergy->at(1);
@@ -235,5 +240,5 @@ double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_back
 }
 void Renormalize(ISOTOPE isotope, TH1D* hist)
 {
-  
+  // I'm not sure if we actually NEED the 2nu halflife if we aren't looking at backgrounds? It doesn't seem to matter if I scale it. And we don't  know how long we will run for, so we can't turn it to a number of events.
 }

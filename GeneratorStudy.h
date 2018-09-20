@@ -34,14 +34,15 @@
 #include "TLimit.h"
 #include "TConfidenceLevel.h"
 #include "TLimitDataSource.h"
+#include "TError.h"
 
 using namespace std;
 
 string treeName="SimData";
 
-// 6 walls for the calorimeters, the order matters
 
 enum ISOTOPE  {SE82, ND150};
+
 // Everything for 82Se and 150Nd
 string ISOTOPE_LATEX[2] = {"^{82}Se","^{150}Nd"};
 string ISOTOPE_NAME[2] = {"Se82","Nd150"};
@@ -52,9 +53,16 @@ double FRAC_OVER_2MEV[2]={1,0.0982};
 int ATOMIC_MASS[2]={82,150}; //Selenium 82, Neodymium 150
 double HALFLIFE2NU[2]={10.07e19,9.1e18}; // 2nubb halflife in years
 int TLIMIT_EXPERIMENTS=50000; // Number of pesudoexperiments to run for limit calculation
-double DESIRED_CONFIDENCE=0.1; // 0.1 -> 90% confidence level
-double DESIRED_SENSITIVITY=1.e28; // How long do we need to run to reach this 0nubb halflife sensitivity (years)?
+double DESIRED_CONFIDENCE=0.003; // 0.003 = 3 sigma (99.7% confident)
+// How long do we need to run to reach this 0nubb halflife sensitivity (years)?
+// The goal is something that corresponds to 1e28 in the big future experiments (which use different isotopes)
+// The numbers are based on the average of the calculations from Laurent's list in docdb 4680 tables 5-8
+double SENSITIVITY_LEGEND_Se = 2.75e27;// if LEGEND saw 1e28 year halflife in 76Ge
+double SENSITIVITY_LEGEND_Nd = 1.81e27;// if LEGEND saw 1e28 year halflife in 76Ge
+double SENSITIVITY_NEXO_Se = 6.70e27;// if nEXO saw 1e28 year halflife in 136Xe
+double SENSITIVITY_NEXO_Nd = 3.72e27;// if nEXO saw 1e28 year halflife in 136Xe
 double AVOGADRO = 6.022140e23;
+
 
 int main(int argc, char **argv);
 double CalculateExposure(ISOTOPE isotope, double resolutionAt1MeV, double desiredSensitivity);
