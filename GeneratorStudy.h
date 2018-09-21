@@ -75,5 +75,5 @@ double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_back
 void Renormalize(ISOTOPE isotope, TH1D* hist);
 //double GetMax(vector<double> v);
 TGraph *ScaledClone(TGraph *graph, double scale);
-TGraph *SigEventsVsResolution(ISOTOPE isotope);
+TGraph* SigEventsVsResolution(ISOTOPE isotope);
 TGraph* GetExposure(TGraph *sigevents, string compExperiment, ISOTOPE isotope, double desiredSensitivity);

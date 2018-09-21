@@ -12,10 +12,8 @@ int main(int argc, char **argv)
   
 //  Analyze(ND150, 0.01); // 1% energy resolution at 1MeV
 //  cout<<"82Se, LEGEND halflife of "<<SENSITIVITY_LEGEND_Se<<" years"<<endl;
-  TCanvas *c=new TCanvas("c","c",900,600);
   TGraph * sigevents_se82 = SigEventsVsResolution(SE82);
-  sigevents_se82->Draw();
-  c->SaveAs("signal_events_Se82.png");
+
   GetExposure(sigevents_se82, "LEGEND", SE82, SENSITIVITY_LEGEND_Se);
   GetExposure(sigevents_se82, "nEXO", SE82, SENSITIVITY_NEXO_Se);
 //  TGraph * sigevents_nd150 = SigEventsVsResolution(ND150);
@@ -65,7 +63,7 @@ TGraph *ScaledClone(TGraph *input, double scale)
   return output;
 }
 
-TGraph *SigEventsVsResolution(ISOTOPE isotope)
+TGraph* SigEventsVsResolution(ISOTOPE isotope)
 {
 
   std::vector<double>resolutions;
@@ -78,16 +76,23 @@ TGraph *SigEventsVsResolution(ISOTOPE isotope)
   std::vector<double>sigEvents;
   for (int i=0;i<resolutions.size();i++)
   {
-    sigEvents.push_back(SigEventLimit(isotope, resolutions.at(i))); // that last one should not get user
+    sigEvents.push_back(SigEventLimit(isotope, resolutions.at(i)));
   }
   TGraph *eventsGraph= new TGraph(resolutions.size(), &resolutions[0], &sigEvents[0]);
   for (int i=0;i<resolutions.size();i++)
   {
     cout<<resolutions.at(i)<<":"<<sigEvents.at(i)<<endl;
   }
+  
   eventsGraph->SetTitle(("Signal event limit "+ISOTOPE_LATEX[isotope]).c_str());
   eventsGraph->GetXaxis()->SetTitle("Fractional resolution at 1MeV");
   eventsGraph->GetYaxis()->SetTitle("Signal event limit");
+  eventsGraph->Print("ALL");
+  TCanvas *c=new TCanvas("c","c",900,600);
+  //TGraph * sigevents_se82 = SigEventsVsResolution(SE82);
+  eventsGraph->Draw();
+  c->SaveAs(("signal_events_"+ISOTOPE_NAME[isotope]+".png").c_str());
+  delete c;
   return eventsGraph;
 }
 
@@ -175,7 +180,7 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV
   int nEntries = tree->GetEntries();
 
 //  for (int i=0;i<nEntries;i++)
-  for (int i=0;i<2000;i++) // Just to make it run faster
+  for (int i=0;i<20000;i++) // Just to make it run faster
   {
     tree->GetEntry(i);
     double totalEnergy=electronEnergy->at(0)+electronEnergy->at(1);
