@@ -10,15 +10,10 @@ int main(int argc, char **argv)
   trand = new TRandom3();
   gStyle->SetOptStat(0);
   
-//  Analyze(ND150, 0.01); // 1% energy resolution at 1MeV
-//  cout<<"82Se, LEGEND halflife of "<<SENSITIVITY_LEGEND_Se<<" years"<<endl;
   TGraph * sigevents_se82 = SigEventsVsResolution(SE82);
 
   GetExposure(sigevents_se82, "LEGEND", SE82, SENSITIVITY_LEGEND_Se);
   GetExposure(sigevents_se82, "nEXO", SE82, SENSITIVITY_NEXO_Se);
-//  TGraph * sigevents_nd150 = SigEventsVsResolution(ND150);
-//  sigevents_nd150->Draw();
-//  c->SaveAs("signal_events_Nd150.png");
   
   return 0;
 }
@@ -68,9 +63,9 @@ TGraph* SigEventsVsResolution(ISOTOPE isotope)
 
   std::vector<double>resolutions;
   resolutions.push_back(0.01);
-//  resolutions.push_back(0.02);
-//  resolutions.push_back(0.03);
-//  resolutions.push_back(0.04);
+  resolutions.push_back(0.02);
+  resolutions.push_back(0.03);
+  resolutions.push_back(0.04);
   resolutions.push_back(0.05);
 
   std::vector<double>sigEvents;
@@ -95,17 +90,6 @@ TGraph* SigEventsVsResolution(ISOTOPE isotope)
   delete c;
   return eventsGraph;
 }
-
-//// Pick out the max value of a vector of doubles
-//double GetMax(vector<double> v)
-//{
-//  double max=v.at(0);
-//  for (int i=1;i<v.size();i++)
-//  {
-//    if (v.at(i)>max) max=v.at(i);
-//  }
-//  return max;
-//}
 
 double SigEventLimit(ISOTOPE isotope, double resolutionAt1MeV)
 {
@@ -179,8 +163,8 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV
   // Loop the entries
   int nEntries = tree->GetEntries();
 
-//  for (int i=0;i<nEntries;i++)
-  for (int i=0;i<20000;i++) // Just to make it run faster
+  for (int i=0;i<nEntries;i++)
+  //for (int i=0;i<20000;i++) // Just to make it run faster
   {
     tree->GetEntry(i);
     double totalEnergy=electronEnergy->at(0)+electronEnergy->at(1);
