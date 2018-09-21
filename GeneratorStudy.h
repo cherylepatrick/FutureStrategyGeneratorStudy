@@ -69,7 +69,6 @@ int main(int argc, char **argv);
 double SigEventLimit(ISOTOPE isotope, double resolutionAt1MeV);
 double Smear(double energy, double smearCoefficient);
 TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV);
-TH1D * FAKESmearedHistogram(ISOTOPE isotope, double resolutionAt1MeV);
 //double EstimateBackgroundEvents(double backgroundEfficiency, double isotopeMass, double molarMass, double halfLife);
 double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_background, TH1D* h_data );
 void Renormalize(ISOTOPE isotope, TH1D* hist);

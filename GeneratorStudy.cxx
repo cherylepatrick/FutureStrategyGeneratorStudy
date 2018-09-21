@@ -127,26 +127,6 @@ double SigEventLimit(ISOTOPE isotope, double resolutionAt1MeV)
   return signalEvents;
 }
 
-TH1D * FAKESmearedHistogram(ISOTOPE isotope, double resolutionAt1MeV) // Just put this here til we get the 0nu simulation
-{
-  
-  TH1D *hfake = new TH1D("hfake",(ISOTOPE_LATEX[isotope]).c_str(),300,2.1,Qbb[isotope]*1.1);
-  for (int i=0;i<100000;i++)
-  {
-    double fakeSmeared=Smear(Qbb[isotope],resolutionAt1MeV);
-    hfake->Fill(fakeSmeared);
-  }
-  
-  TCanvas *c = new TCanvas (("totalEnergy_"+ISOTOPE_NAME[isotope]).c_str(),("Smeared energy: "+ISOTOPE_NAME[isotope]).c_str(),900,600);
-  hfake->Draw("HIST");
-  
-
-  // Save a PNG
-  string title="energySmear0nu_"+ISOTOPE_NAME[isotope]+".png";
-  c->SaveAs(title.c_str());
-  delete c;
-  return hfake;
-}
 
 TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV)
 {
