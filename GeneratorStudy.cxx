@@ -11,26 +11,110 @@ int main(int argc, char **argv)
   gStyle->SetOptStat(0);
   
 //  Analyze(ND150, 0.01); // 1% energy resolution at 1MeV
-  cout<<"82Se, LEGEND halflife of "<<SENSITIVITY_LEGEND_Se<<" years"<<endl;
-  double at5=CalculateExposure(SE82, 0.05, SENSITIVITY_LEGEND_Se); // 1% energy resolution at 1MeV, sensitivity desired
-  double at3=CalculateExposure(SE82, 0.03, SENSITIVITY_LEGEND_Se); // 1% energy resolution at 1MeV, sensitivity desired
-
-  double at1=CalculateExposure(SE82, 0.01, SENSITIVITY_LEGEND_Se); // 10% energy resolution at 1MeV
-  cout<<"1% resolution: "<<at1<<" 3%: "<<at3<<" 5% resolution: "<<at5<<endl;
+//  cout<<"82Se, LEGEND halflife of "<<SENSITIVITY_LEGEND_Se<<" years"<<endl;
+  TCanvas *c=new TCanvas("c","c",900,600);
+  TGraph * sigevents_se82 = SigEventsVsResolution(SE82);
+  sigevents_se82->Draw();
+  c->SaveAs("signal_events_Se82.png");
+  GetExposure(sigevents_se82, "LEGEND", SE82, SENSITIVITY_LEGEND_Se);
+  GetExposure(sigevents_se82, "nEXO", SE82, SENSITIVITY_NEXO_Se);
+//  TGraph * sigevents_nd150 = SigEventsVsResolution(ND150);
+//  sigevents_nd150->Draw();
+//  c->SaveAs("signal_events_Nd150.png");
+  
   return 0;
 }
 
-double CalculateExposure(ISOTOPE isotope, double resolutionAt1MeV, double desiredSensitivity)
+TGraph* GetExposure(TGraph *sigevents, string compExperiment, ISOTOPE isotope, double desiredSensitivity)
+{
+  
+    // From previous sensitivity calculations:
+  //double totalTLimitSensitivity= (zeroNuEfficiency/totalExpectedSignalEventLimit) * ((se82IsotopeMass*1000 * AVOGADRO)/se82MolarMass) * TMath::Log(2) * exposureYears;
+  
+  // Rearrange to get exposure in kg-years needed to reach desired sensitivity
+  // We want to scale our graph by the number of kg years divided by the number of signal events
+  
+  double scale = desiredSensitivity *  ATOMIC_MASS[isotope]/ (AVOGADRO  * 1000. * TMath::Log(2)); // Necessary exposure increases with sensitivity and how many events are needed. Decreases with the number of atoms of isotope per kg. Log 2 is because we want a half-life not a decay constant. 1000 is because a mole of material is (atomic mass in grams)
+  
+  TGraph *exposure=ScaledClone(sigevents,scale);
+  exposure->GetYaxis()->SetTitle("Exposure (kg.years)");
+  string title="Exposure for "+ISOTOPE_LATEX[isotope]+" if "+compExperiment+" sees something";
+  exposure->SetTitle(title.c_str());
+  string pngTitle="exposure_"+ISOTOPE_NAME[isotope]+"_"+compExperiment+".png";
+  TCanvas *c1=new TCanvas("c1","c1",900,600);
+  exposure->Draw();
+  c1->SaveAs(pngTitle.c_str());
+  delete c1;
+  return exposure;
+}
+
+TGraph *ScaledClone(TGraph *input, double scale)
+{
+  std::vector<double>x;
+  std::vector<double>y;
+  for (int i=0;i<input->GetN();i++)
+  {
+    x.push_back(input->GetX()[i]);
+    y.push_back(input->GetY()[i] * scale);
+  }
+  
+  TGraph *output= new TGraph(x.size(),&x[0],&y[0]);
+  output->SetTitle(input->GetTitle());
+  output->GetXaxis()->SetTitle(input->GetXaxis()->GetTitle());
+  output->GetYaxis()->SetTitle(input->GetYaxis()->GetTitle());
+  return output;
+}
+
+TGraph *SigEventsVsResolution(ISOTOPE isotope)
+{
+
+  std::vector<double>resolutions;
+  resolutions.push_back(0.01);
+//  resolutions.push_back(0.02);
+//  resolutions.push_back(0.03);
+//  resolutions.push_back(0.04);
+  resolutions.push_back(0.05);
+
+  std::vector<double>sigEvents;
+  for (int i=0;i<resolutions.size();i++)
+  {
+    sigEvents.push_back(SigEventLimit(isotope, resolutions.at(i))); // that last one should not get user
+  }
+  TGraph *eventsGraph= new TGraph(resolutions.size(), &resolutions[0], &sigEvents[0]);
+  for (int i=0;i<resolutions.size();i++)
+  {
+    cout<<resolutions.at(i)<<":"<<sigEvents.at(i)<<endl;
+  }
+  eventsGraph->SetTitle(("Signal event limit "+ISOTOPE_LATEX[isotope]).c_str());
+  eventsGraph->GetXaxis()->SetTitle("Fractional resolution at 1MeV");
+  eventsGraph->GetYaxis()->SetTitle("Signal event limit");
+  return eventsGraph;
+}
+
+//// Pick out the max value of a vector of doubles
+//double GetMax(vector<double> v)
+//{
+//  double max=v.at(0);
+//  for (int i=1;i<v.size();i++)
+//  {
+//    if (v.at(i)>max) max=v.at(i);
+//  }
+//  return max;
+//}
+
+double SigEventLimit(ISOTOPE isotope, double resolutionAt1MeV)
 {
   TH1D *smeared2nu = makeSmearedHistogram(isotope,true,resolutionAt1MeV);
   TH1D *smeared0nu = makeSmearedHistogram(isotope,false, resolutionAt1MeV);
-  
+  smeared0nu->GetSumw2();
+  smeared2nu->GetSumw2();
   // Plot the two together
   TCanvas *c = new TCanvas (("totalEnergy_"+ISOTOPE_NAME[isotope]).c_str(),("Energy: "+ISOTOPE_NAME[isotope]).c_str(),900,600);
   
   smeared2nu->SetLineColor(kBlack);
   smeared2nu->Draw("HIST");
   smeared0nu->Scale(smeared2nu->Integral()/smeared0nu->Integral() * 0.1); // Kind of an arbitrary scale for the 0nu sample, just for show
+  //smeared0nu->Scale(smeared2nu->Integral()/smeared0nu->Integral() * 1e-5); // Approximate scaling - 0nu halflives are about 1e27, 2nu are about 1e20, but we only have ~1% of 2nu events. But it looks like the scale doesn't matter?
   smeared0nu->SetLineColor(kRed);
   smeared0nu->Draw("HIST SAME");
   
@@ -41,25 +125,17 @@ double CalculateExposure(ISOTOPE isotope, double resolutionAt1MeV, double desire
   legend->Draw();
   
   // Save a PNG
-  string title="smearedComparison_"+ISOTOPE_NAME[isotope]+".png";
+  string title="smearedComparison_"+ISOTOPE_NAME[isotope]+Form("_%.0f.png",resolutionAt1MeV*100);
   c->SaveAs(title.c_str());
 
   // Calculate signal event limit
   
   double signalEvents=ExpectedLimitSigEvts(DESIRED_CONFIDENCE, smeared0nu, smeared2nu, smeared2nu ); // "Data" is background
   cout<<signalEvents<<" signal events needed"<<endl;
-  
-  // From previous sensitivity calculations:
-  //double totalTLimitSensitivity= (zeroNuEfficiency/totalExpectedSignalEventLimit) * ((se82IsotopeMass*1000 * AVOGADRO)/se82MolarMass) * TMath::Log(2) * exposureYears;
-  
-  // Rearrange to get exposure in kg-years needed to reach desired sensitivity
-  double kgYears = desiredSensitivity *  signalEvents * ATOMIC_MASS[isotope]/ (AVOGADRO  * 1000. * TMath::Log(2)); // Increases with sensitivity and how many events are needed. Decreases with the number of atoms of isotope per kg. Log 2 is because we want a half-life not a decay constant. 1000 is because a mole of material is (atomic mass in grams)
 
-  cout<<ISOTOPE_NAME[isotope]<<": For sensitivity "<<desiredSensitivity<<" and resolution "<<resolutionAt1MeV<<" we need exposure of " <<kgYears<<" kg.years"<<endl;
-  
   delete c;
-  return kgYears;
-
+//  return kgYears;
+  return signalEvents;
 }
 
 TH1D * FAKESmearedHistogram(ISOTOPE isotope, double resolutionAt1MeV) // Just put this here til we get the 0nu simulation
@@ -99,7 +175,7 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV
   int nEntries = tree->GetEntries();
 
 //  for (int i=0;i<nEntries;i++)
-  for (int i=0;i<200000;i++) // Just to make it run faster
+  for (int i=0;i<2000;i++) // Just to make it run faster
   {
     tree->GetEntry(i);
     double totalEnergy=electronEnergy->at(0)+electronEnergy->at(1);

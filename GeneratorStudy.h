@@ -35,6 +35,7 @@
 #include "TConfidenceLevel.h"
 #include "TLimitDataSource.h"
 #include "TError.h"
+#include "TGraph.h"
 
 using namespace std;
 
@@ -65,10 +66,14 @@ double AVOGADRO = 6.022140e23;
 
 
 int main(int argc, char **argv);
-double CalculateExposure(ISOTOPE isotope, double resolutionAt1MeV, double desiredSensitivity);
+double SigEventLimit(ISOTOPE isotope, double resolutionAt1MeV);
 double Smear(double energy, double smearCoefficient);
 TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV);
 TH1D * FAKESmearedHistogram(ISOTOPE isotope, double resolutionAt1MeV);
 //double EstimateBackgroundEvents(double backgroundEfficiency, double isotopeMass, double molarMass, double halfLife);
 double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_background, TH1D* h_data );
 void Renormalize(ISOTOPE isotope, TH1D* hist);
+//double GetMax(vector<double> v);
+TGraph *ScaledClone(TGraph *graph, double scale);
+TGraph *SigEventsVsResolution(ISOTOPE isotope);
+TGraph* GetExposure(TGraph *sigevents, string compExperiment, ISOTOPE isotope, double desiredSensitivity);
