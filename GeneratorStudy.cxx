@@ -18,10 +18,13 @@ int main(int argc, char **argv)
   return 0;
 }
 
-void MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredSensitivity)
+void MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredHalflife)
 {
   vector<TH1D*> smeared2nuPlots;
   vector<TH1D*> smeared0nuPlots;
+
+  // Load the plots from the smeared plots file
+  
   TFile *f=new TFile(SMEARED_HISTO_FILE[isotope].c_str());
   TList* list = f->GetListOfKeys() ;
   TIter next(list) ;
@@ -49,19 +52,113 @@ void MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredSensi
           {
             cout<<"Couldn't get corresponding 0nu histogram for "<<obj->GetName()<<endl;
           }
-        // Get the corresponding 0nu histogram, write it to smeared0nuplots
+          // Get the corresponding 0nu histogram, write it to smeared0nuplots
         }
       } catch (exception &e) {
         cout<<"Couldn't get corresponding 2nu and 0nu histograms for "<<obj->GetName()<<endl;
       }
-
     }
   }
+
+  if (smeared2nuPlots.size()==0 || smeared2nuPlots.size() != smeared0nuPlots.size())
+  {
+    cout<<"Unable to load smeared histograms, quitting"<<endl;
+    return;
+  }
+
+  for (int i=0;i<1;i++)
+//    for (int i=0;i<smeared2nuPlots.size();i++)
+  {
+    
+    double exposure=GetExposure(smeared2nuPlots.at(i),smeared0nuPlots.at(i),isotope,desiredHalflife);
+    cout<<"The best exposure is "<<exposure<<endl;
+  }
+  
   f->Close();
-  return;
 }
 
+double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desiredHalflife)
+{
+  // Here are the steps:
+  // We have a desired 0nubb halflife. That corresponds to an expected number of signal events
+  // depending on the exposure (mass x time)
+  // The exposure is proportional to the amount of 2nubb, as we know the 2nubb halflife
+  // Find the amount of 2nubb that gives us the number of signal events corresponding to our
+  // desired halflife
+  
+  if( hist2nu->GetSumw2N() == 0 )hist2nu->Sumw2();
+  if( hist0nu->GetSumw2N() == 0 )hist0nu->Sumw2();
 
+  TH1D *low2nu = (TH1D*)hist2nu->Clone();
+  TH1D *high2nu = (TH1D*)hist2nu->Clone();
+
+  double low2nuEvents=Get2nuEventsForExposure(1000, isotope);
+  double high2nuEvents=Get2nuEventsForExposure(50000, isotope);
+  
+  double low0nuEvents=Get0nuEventsForExposure(1000, isotope, desiredHalflife);
+  double high0nuEvents=Get0nuEventsForExposure(50000, isotope, desiredHalflife);
+  
+  
+  cout<<"low "<<low2nuEvents<<" high 2nu events"<<high2nuEvents<<endl;
+  cout<<"low "<<low0nuEvents<<" high 0nu events"<<high0nuEvents<<endl;
+  
+  low2nu->Scale( low2nuEvents / TOTAL_2NU_EVENTS[isotope]); // Lower bound - 1000kg years
+  high2nu->Scale( high2nuEvents / TOTAL_2NU_EVENTS[isotope]); // Upper bound - 100000 kg years
+  
+  cout<<"Exposure check:  "<<GetExposureFrom2nuEvents(low2nuEvents,isotope)<<" - "<<GetExposureFrom2nuEvents(high2nuEvents,isotope)<<endl;
+  double this2nuEvents=0;
+  double this0nuEvents=0;
+  double thisExposure=0;
+  double signalEventLimit=-9999;
+  double accuracy=0.1;
+  
+  // Try different exposures to find one where the signal event limit
+  // matches the number of 0nubb events we expect to get
+  while  (fabs(signalEventLimit - this0nuEvents) > accuracy)
+  {
+    this2nuEvents = low2nuEvents + (high2nuEvents - low2nuEvents)/3;
+    thisExposure= GetExposureFrom2nuEvents(this2nuEvents, isotope);
+    // This how many 0nu events we would get at our desired halflife
+    this0nuEvents=Get0nuEventsForExposure(thisExposure,isotope, desiredHalflife);
+    // Now see how the signal event limit compares to this number of events
+    // to find out whether we could detect them or not
+    TH1D *this2nu=(TH1D*)hist2nu->Clone();
+    this2nu->Scale(this2nuEvents / TOTAL_2NU_EVENTS[isotope]);
+    double signalEventLimit=ExpectedLimitSigEvts(DESIRED_CONFIDENCE, hist0nu, this2nu, this2nu );
+    cout<<"**** Exposure "<<thisExposure<<" would have "<<this0nuEvents<<" 0nu and the limit is "<<signalEventLimit<<endl;
+    if (fabs(signalEventLimit - this0nuEvents) > accuracy)
+    {
+      // If the limit is higher than the halflife, we won't see it and we need more events
+      // If it's lower, we can get away with less exposure
+      if (signalEventLimit < this0nuEvents)
+        high2nuEvents = this2nuEvents;
+      else
+        low2nuEvents =  this2nuEvents;
+    }
+    else
+      return thisExposure;
+  }
+  return thisExposure;
+
+}
+
+double Get2nuEventsForExposure(double exposure, ISOTOPE isotope)
+{
+  // Number of atoms times exposure time / 2nubb decay constant
+  return exposure * (AVOGADRO * 1000 / ATOMIC_MASS[isotope]) * (TMath::Log(2) / HALFLIFE2NU[isotope]); // 1000 is because we have kg years exposure, but atomic mass is grams per mole
+}
+
+double Get0nuEventsForExposure(double exposure, ISOTOPE isotope, double desiredHalflife)
+{
+  // Number of atoms times exposure time / 2nubb decay constant
+  return exposure * (AVOGADRO * 1000 / ATOMIC_MASS[isotope]) * (TMath::Log(2) / desiredHalflife); // 1000 is because we have kg years exposure, but atomic mass is grams per mole
+}
+
+double GetExposureFrom2nuEvents(double events, ISOTOPE isotope)
+{
+  // Inverse of the other calculation: events divided by number of atoms per kg, times decay constant
+  return events / ( (AVOGADRO * 1000 / ATOMIC_MASS[isotope]) * (TMath::Log(2) / HALFLIFE2NU[isotope]) );
+}
 
 TGraph* GetExposure(TGraph *sigevents, string compExperiment, ISOTOPE isotope, double desiredSensitivity)
 {
