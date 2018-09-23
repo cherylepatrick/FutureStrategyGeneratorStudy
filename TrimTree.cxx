@@ -25,7 +25,16 @@ using namespace std;
  */
 int main(int argc, char **argv)
 {
-  string fName="/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1.root";
+  string fName;
+  if (argc>1)
+  {
+    fName=argv[1];
+  }
+  else
+  {
+    cout<<"Give a file to trim"<<endl;
+  }
+  
   TFile *fIn = new TFile(fName.c_str());
   TTree *tree = (TTree*) fIn->Get("SimData");
   string outname=fName.substr(0,fName.length()-5)+"_trimmed.root";
