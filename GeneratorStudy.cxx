@@ -9,14 +9,59 @@ int main(int argc, char **argv)
 {
   trand = new TRandom3();
   gStyle->SetOptStat(0);
-  
-  TGraph * sigevents_se82 = SigEventsVsResolution(SE82);
-
-  GetExposure(sigevents_se82, "LEGEND", SE82, SENSITIVITY_LEGEND_Se);
-  GetExposure(sigevents_se82, "nEXO", SE82, SENSITIVITY_NEXO_Se);
-  
+//  
+//  TGraph * sigevents_se82 = SigEventsVsResolution(SE82);
+//
+//  GetExposure(sigevents_se82, "LEGEND", SE82, SENSITIVITY_LEGEND_Se);
+//  GetExposure(sigevents_se82, "nEXO", SE82, SENSITIVITY_NEXO_Se);
+  MakeExposureGraph("blah",SE82,SENSITIVITY_LEGEND_Se);
   return 0;
 }
+
+void MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredSensitivity)
+{
+  vector<TH1D*> smeared2nuPlots;
+  vector<TH1D*> smeared0nuPlots;
+  TFile *f=new TFile(SMEARED_HISTO_FILE[isotope].c_str());
+  TList* list = f->GetListOfKeys() ;
+  TIter next(list) ;
+  TKey* key ;
+  TObject* obj ;
+  
+  while (( key = (TKey*)next() )) {
+    obj = key->ReadObj() ;
+    if ( obj->InheritsFrom("TH1")) // It's a histogram
+    {
+      try {
+        // If it is a 2nu histogram, write it to smeared2nuplots
+        string histname=obj->GetName();
+        if (histname.find("smeared_2nu_")==0)
+        {
+          string name0nu=histname.replace(8,1,"0");
+          if (list->Contains(name0nu.c_str()))
+          {
+            TH1D *hist0nu=(TH1D*)f->Get(name0nu.c_str());
+            smeared2nuPlots.push_back((TH1D*)obj);
+            smeared0nuPlots.push_back(hist0nu);
+            cout<<"Loading histograms "<<histname<<" and "<<name0nu<<endl;
+          }
+          else
+          {
+            cout<<"Couldn't get corresponding 0nu histogram for "<<obj->GetName()<<endl;
+          }
+        // Get the corresponding 0nu histogram, write it to smeared0nuplots
+        }
+      } catch (exception &e) {
+        cout<<"Couldn't get corresponding 2nu and 0nu histograms for "<<obj->GetName()<<endl;
+      }
+
+    }
+  }
+  f->Close();
+  return;
+}
+
+
 
 TGraph* GetExposure(TGraph *sigevents, string compExperiment, ISOTOPE isotope, double desiredSensitivity)
 {

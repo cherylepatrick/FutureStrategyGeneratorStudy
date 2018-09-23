@@ -50,7 +50,9 @@ string ISOTOPE_NAME[2] = {"Se82","Nd150"};
 double Qbb[2] = {2.99,3.368};
 string FILES2NU[2]={"/Users/cpatrick/uclnemo3/generatorstudy/se82/2nubb/Se82_2nubb_1E8_flsim_1.root","/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1_trimmed.root"};
 string FILES0NU[2]={"/Users/cpatrick/uclnemo3/generatorstudy/se82/0nubb/Se82_0nubb_1E8_flsim_1.root"," /Users/cpatrick/uclnemo3/generatorstudy/nd150/nd150_0nu/1e5/run_1/Nd150_0nubb_1E6_flsim_1.root"};
-double FRAC_OVER_2MEV[2]={1,0.0982};
+string SMEARED_HISTO_FILE[2]={"smeared_hists_Se82.root","smeared_hists_Nd150.root"};
+int TOTAL_2NU_EVENTS[2]={1000000,1000000};
+//double FRAC_OVER_2MEV[2]={1,0.0982};
 int ATOMIC_MASS[2]={82,150}; //Selenium 82, Neodymium 150
 double HALFLIFE2NU[2]={10.07e19,9.1e18}; // 2nubb halflife in years
 int TLIMIT_EXPERIMENTS=50000; // Number of pesudoexperiments to run for limit calculation
@@ -76,3 +78,4 @@ void Renormalize(ISOTOPE isotope, TH1D* hist);
 TGraph *ScaledClone(TGraph *graph, double scale);
 TGraph* SigEventsVsResolution(ISOTOPE isotope);
 TGraph* GetExposure(TGraph *sigevents, string compExperiment, ISOTOPE isotope, double desiredSensitivity);
+void MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredSensitivity);
