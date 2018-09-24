@@ -10,7 +10,7 @@ int main(int argc, char **argv)
   
   trand = new TRandom3();
   gStyle->SetOptStat(0);
-  string helptext="First argument: Se or Nd, second argument: percent to smear by";
+  string helptext="First argument: Se or Nd, second argument: percent to smear by, third arg: output root file";
   
   double smearing=0;
   ISOTOPE isotope;
@@ -22,7 +22,7 @@ int main(int argc, char **argv)
     else if ((std::toupper(arg1[0])=='N') && (std::toupper(arg1[1])=='D'))isotope=ND150;
     else
     {
-      cout<<"First argument: Se or Nd, second argument: percent to smear by"<<endl;
+      cout<<"First argument: Se or Nd, second argument: percent to smear by, third arg: output root file"<<endl;
       return 1;
     }
     
@@ -65,6 +65,8 @@ int main(int argc, char **argv)
     cout<<"Saving to default file ";
     filename = "smeared_hists_"+ISOTOPE_NAME[isotope]+".root";
   }
+  
+
   
   string smeartext=Form("_%f",smearing*0.01);
   int pos=smeartext.find(".");
