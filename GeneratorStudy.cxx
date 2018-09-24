@@ -66,12 +66,18 @@ void MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredHalfl
     return;
   }
 
-  for (int i=0;i<1;i++)
-//    for (int i=0;i<smeared2nuPlots.size();i++)
+//  for (int i=0;i<1;i++)
+    for (int i=0;i<smeared2nuPlots.size();i++)
   {
-    
+    // Find out the smearing percentage
+    string plotname=smeared2nuPlots.at(i)->GetName();
+    int pos=plotname.find(ISOTOPE_NAME[isotope]) + ISOTOPE_NAME[isotope].length()+1;
+    string fractionString=plotname.substr(pos);
+    pos=fractionString.find("_");
+    fractionString=fractionString.replace(pos,1,".");
+    double percentage=100. * atof(fractionString.c_str());
     double exposure=GetExposure(smeared2nuPlots.at(i),smeared0nuPlots.at(i),isotope,desiredHalflife);
-    cout<<"The best exposure is "<<exposure<<endl;
+    cout<<"The best exposure is "<<exposure<<" for "<<percentage<<"% smearing"<<endl;
   }
   
   f->Close();
@@ -79,6 +85,8 @@ void MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredHalfl
 
 double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desiredHalflife)
 {
+  // ######### take this out!!!!!!!!!
+  return 3500 + trand->Gaus(0,500);
   // Here are the steps:
   // We have a desired 0nubb halflife. That corresponds to an expected number of signal events
   // depending on the exposure (mass x time)
