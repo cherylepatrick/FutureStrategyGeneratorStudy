@@ -15,6 +15,7 @@ int main(int argc, char **argv)
 
 TGraph* MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredHalflife)
 {
+  cout<<"Experiment: "<<experimentText<<" isotope "<<ISOTOPE_NAME[isotope]<<endl;
   vector<TH1D*> smeared2nuPlots;
   vector<TH1D*> smeared0nuPlots;
 
@@ -141,23 +142,18 @@ double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desired
   if( hist2nu->GetSumw2N() == 0 )hist2nu->Sumw2();
   if( hist0nu->GetSumw2N() == 0 )hist0nu->Sumw2();
 
-  TH1D *low2nu = (TH1D*)hist2nu->Clone();
-  TH1D *high2nu = (TH1D*)hist2nu->Clone();
+  // If we are worried our limits might not be wide enough, we could check here
+//  TH1D *low2nu = (TH1D*)hist2nu->Clone();
+//  TH1D *high2nu = (TH1D*)hist2nu->Clone();
 
-  double low2nuEvents=Get2nuEventsForExposure(1000, isotope);
-  double high2nuEvents=Get2nuEventsForExposure(50000, isotope);
+  double lowExposure=1000;
+  double highExposure=50000;
+  double low2nuEvents=Get2nuEventsForExposure(lowExposure, isotope);
+  double high2nuEvents=Get2nuEventsForExposure(highExposure, isotope);
   
-  double low0nuEvents=Get0nuEventsForExposure(1000, isotope, desiredHalflife);
-  double high0nuEvents=Get0nuEventsForExposure(50000, isotope, desiredHalflife);
+//  double low0nuEvents=Get0nuEventsForExposure(lowExposure, isotope, desiredHalflife);
+//  double high0nuEvents=Get0nuEventsForExposure(highExposure, isotope, desiredHalflife);
   
-  
-  cout<<"low "<<low2nuEvents<<" high 2nu events"<<high2nuEvents<<endl;
-  cout<<"low "<<low0nuEvents<<" high 0nu events"<<high0nuEvents<<endl;
-  
-  low2nu->Scale( low2nuEvents / TOTAL_2NU_EVENTS[isotope]); // Lower bound - 1000kg years
-  high2nu->Scale( high2nuEvents / TOTAL_2NU_EVENTS[isotope]); // Upper bound - 100000 kg years
-  
-  cout<<"Exposure check:  "<<GetExposureFrom2nuEvents(low2nuEvents,isotope)<<" - "<<GetExposureFrom2nuEvents(high2nuEvents,isotope)<<endl;
   double this2nuEvents=0;
   double this0nuEvents=0;
   double thisExposure=0;
