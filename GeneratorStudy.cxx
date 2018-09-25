@@ -9,9 +9,65 @@ int main(int argc, char **argv)
 {
   trand = new TRandom3();
   gStyle->SetOptStat(0);
-  TFile *outfile = new TFile("exposure_graphs.root","UPDATE");
-  TGraph *g=MakeExposureGraph("LEGEND average",SE82,SENSITIVITY_LEGEND_Se);
+
+  string graphname="";
+  double halflife=0;
+  ISOTOPE isotope=SE82;
+  string isotopetext ="";
+  string outputfile = "exposure_graphs.root";
+  if (argc < 2)
+  {
+    cout<<"Usage: "<<argv[0]<<" -i <se or nd> -s <sensitivity in years> -x <experiment name> -o <outputfile>"<<endl;
+    return -1;
+  }
+  int flag=0;
+  while ((flag = getopt (argc, argv, "i:s:x:o:")) != -1)
+  {
+    switch (flag)
+    {
+      case 'i':
+        if ((std::toupper(optarg[0])=='S') && (std::toupper(optarg[1])=='E'))isotope=SE82;
+        else if ((std::toupper(optarg[0])=='N') && (std::toupper(optarg[1])=='D'))isotope=ND150;
+        else
+        {
+          cout<<"Invalid isotope, pick Se or Nd"<<endl;
+          return 1;
+        }
+        break;
+      case 's':
+        halflife = atof(optarg);
+        break;
+      case 'x':
+        graphname = optarg;
+        break;
+      case 'o':
+        outputfile = optarg;
+        break;
+      case '?':
+        if (optopt == 'i' || optopt == 's' || optopt == 'x' || optopt == 'o' )
+          fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+        else if (isprint (optopt))
+          fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+        else
+          fprintf (stderr,
+                   "Unknown option character `\\x%x'.\n",
+                   optopt);
+        cout<<"Usage: "<<argv[0]<<" -i <se or nd> -s <sensitivity in years> -x <experiment name> -o <outputfile>"<<endl;
+        return 1;
+      default:
+        abort ();
+    }
+  }
   
+  if (graphname=="" || halflife<=0)
+  {
+    cout<<"Usage: "<<argv[0]<<" -i <se or nd> -s <sensitivity in years> -x <experiment name> -o <outputfile>"<<endl;
+    return 1;
+  }
+  cout<<"Writing graph "<<graphname<<" for "<<ISOTOPE_NAME[isotope]<<" with halflife "<<halflife<<" years to "<<outputfile<<endl;
+  TGraph *g=MakeExposureGraph(graphname,isotope,halflife);
+  
+  TFile *outfile = new TFile(outputfile.c_str(),"UPDATE");
   outfile->cd();
   g->Write("",TObject::kOverwrite);
   return 0;
