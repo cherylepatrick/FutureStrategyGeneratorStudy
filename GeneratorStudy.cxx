@@ -9,7 +9,11 @@ int main(int argc, char **argv)
 {
   trand = new TRandom3();
   gStyle->SetOptStat(0);
+  TFile *outfile = new TFile("exposure_graphs.root","UPDATE");
   TGraph *g=MakeExposureGraph("LEGEND average",SE82,SENSITIVITY_LEGEND_Se);
+  
+  outfile->cd();
+  g->Write("",TObject::kOverwrite);
   return 0;
 }
 
@@ -99,6 +103,7 @@ TGraph* MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredHa
 
   // Plot smearing vs exposure
   TGraph *exposureGraph = new TGraph(sortedSmearings.size(),&sortedSmearings[0], &sortedExposures[0]);
+  exposureGraph->SetName((ISOTOPE_NAME[isotope]+"_"+experimentText).c_str());
   exposureGraph->SetTitle((ISOTOPE_LATEX[isotope]+": "+experimentText).c_str());
   exposureGraph->GetXaxis()->SetTitle("Percentage resolution at 1MeV");
   exposureGraph->GetYaxis()->SetTitle("Required exposure (kg.year)");
@@ -131,7 +136,7 @@ int GetNextSmearing(std::vector<double> smearings, double previousSmearing)
 double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desiredHalflife)
 {
   // ######### take this out!!!!!!!!!
-  //return 3500 + trand->Gaus(0,500);
+ // return 3500 + trand->Gaus(0,500);
   // Here are the steps:
   // We have a desired 0nubb halflife. That corresponds to an expected number of signal events
   // depending on the exposure (mass x time)
