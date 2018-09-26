@@ -5,3 +5,6 @@ TrimTree
 TrimTree.o
 SmearHistogram
 SmearHistogram.o
+*.o
+FormatGraphs
+FormatGraphs

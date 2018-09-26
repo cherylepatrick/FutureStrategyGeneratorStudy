@@ -127,7 +127,7 @@ TGraph* MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredHa
   // Calculate the exposure needed for each smearing
   vector<double> smearings;
   vector<double> exposures;
-//  for (int i=0;i<1;i++)
+
   for (int i=0;i<smeared2nuPlots.size();i++)
   {
     // Find out the smearing percentage
