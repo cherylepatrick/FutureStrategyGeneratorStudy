@@ -1,8 +1,8 @@
 // Standard Library
 #include <iostream>
 #include <fstream>
-#include "boost/algorithm/string.hpp"
-#include "boost/filesystem.hpp"
+//#include "boost/algorithm/string.hpp"
+//#include "boost/filesystem.hpp"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,8 +48,8 @@ enum ISOTOPE  {SE82, ND150};
 string ISOTOPE_LATEX[2] = {"^{82}Se","^{150}Nd"};
 string ISOTOPE_NAME[2] = {"Se82","Nd150"};
 double Qbb[2] = {2.99,3.368};
-string FILES2NU[2]={"/Users/cpatrick/uclnemo3/generatorstudy/se82/2nubb/sim_2nubb_trimmed_10M.root","/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1_trimmed.root"};
-string FILES0NU[2]={"/Users/cpatrick/uclnemo3/generatorstudy/se82/0nubb/Se82_0nubb_1E8_flsim_1.root"," /Users/cpatrick/uclnemo3/generatorstudy/nd150/nd150_0nu/1e5/run_1/Nd150_0nubb_1E6_flsim_1.root"};
+//string FILES2NU[2]={"/Users/cpatrick/uclnemo3/generatorstudy/se82/2nubb/sim_2nubb_trimmed_10M.root","/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1_trimmed.root"};
+//string FILES0NU[2]={"/Users/cpatrick/uclnemo3/generatorstudy/se82/0nubb/Se82_0nubb_1E8_flsim_1.root"," /Users/cpatrick/uclnemo3/generatorstudy/nd150/nd150_0nu/1e5/run_1/Nd150_0nubb_1E6_flsim_1.root"};
 string SMEARED_HISTO_FILE[2]={"smeared_hists_Se82.root","smeared_hists_Nd150.root"};
 int TOTAL_2NU_EVENTS[2]={1000000,1000000};
 //double FRAC_OVER_2MEV[2]={1,0.0982};
@@ -68,13 +68,9 @@ double AVOGADRO = 6.022140e23;
 
 
 int main(int argc, char **argv);
-double SigEventLimit(ISOTOPE isotope, double resolutionAt1MeV);
-double Smear(double energy, double smearCoefficient);
-TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV);
-//double EstimateBackgroundEvents(double backgroundEfficiency, double isotopeMass, double molarMass, double halfLife);
+
 double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_background, TH1D* h_data );
 TGraph *ScaledClone(TGraph *graph, double scale);
-TGraph* SigEventsVsResolution(ISOTOPE isotope);
 TGraph* MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredHalflife);
 double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desiredHalflife);
 double Get2nuEventsForExposure(double exposure, ISOTOPE isotope);

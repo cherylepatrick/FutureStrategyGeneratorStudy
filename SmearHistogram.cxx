@@ -1,4 +1,5 @@
-#include "GeneratorStudy.h"
+//#include "GeneratorStudy.h"
+#include "SmearHistogram.h"
 TRandom3 *trand;
 
 /**
