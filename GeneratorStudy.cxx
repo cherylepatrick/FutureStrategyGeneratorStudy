@@ -291,29 +291,6 @@ double GetExposureFrom0nuEvents(double events, ISOTOPE isotope, double halflife)
   return events / ( (AVOGADRO * 1000 / ATOMIC_MASS[isotope]) * (TMath::Log(2) / halflife) );
 }
 
-TGraph* GetExposure(TGraph *sigevents, string compExperiment, ISOTOPE isotope, double desiredSensitivity)
-{
-  
-    // From previous sensitivity calculations:
-  //double totalTLimitSensitivity= (zeroNuEfficiency/totalExpectedSignalEventLimit) * ((se82IsotopeMass*1000 * AVOGADRO)/se82MolarMass) * TMath::Log(2) * exposureYears;
-  
-  // Rearrange to get exposure in kg-years needed to reach desired sensitivity
-  // We want to scale our graph by the number of kg years divided by the number of signal events
-  
-  double scale = desiredSensitivity *  ATOMIC_MASS[isotope]/ (AVOGADRO  * 1000. * TMath::Log(2)); // Necessary exposure increases with sensitivity and how many events are needed. Decreases with the number of atoms of isotope per kg. Log 2 is because we want a half-life not a decay constant. 1000 is because a mole of material is (atomic mass in grams)
-  
-  TGraph *exposure=ScaledClone(sigevents,scale);
-  exposure->GetYaxis()->SetTitle("Exposure (kg.years)");
-  string title="Exposure for "+ISOTOPE_LATEX[isotope]+" if "+compExperiment+" sees something";
-  exposure->SetTitle(title.c_str());
-  string pngTitle="exposure_"+ISOTOPE_NAME[isotope]+"_"+compExperiment+".png";
-  TCanvas *c1=new TCanvas("c1","c1",900,600);
-  exposure->Draw();
-  c1->SaveAs(pngTitle.c_str());
-  delete c1;
-  return exposure;
-}
-
 TGraph *ScaledClone(TGraph *input, double scale)
 {
   std::vector<double>x;
@@ -556,7 +533,4 @@ double ExpectedLimitSigEvts(double ConfidenceLevel, TH1D* h_signal, TH1D* h_back
   // Number of events is the scale factor * the original integral
   return h_signal->Integral() * this_val;
 }
-void Renormalize(ISOTOPE isotope, TH1D* hist)
-{
-  // I'm not sure if we actually NEED the 2nu halflife if we aren't looking at backgrounds? It doesn't seem to matter if I scale it. And we don't  know how long we will run for, so we can't turn it to a number of events.
-}
+
