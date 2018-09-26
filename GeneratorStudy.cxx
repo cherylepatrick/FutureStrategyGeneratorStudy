@@ -94,9 +94,10 @@ TGraph* MakeExposureGraph(string experimentText,ISOTOPE isotope,double desiredHa
       try {
         // If it is a 2nu histogram, write it to smeared2nuplots
         string histname=obj->GetName();
+        string name0nu=histname;
         if (histname.find("smeared_2nu_")==0)
         {
-          string name0nu=histname.replace(8,1,"0");
+          name0nu.replace(8,1,"0");
           if (list->Contains(name0nu.c_str()))
           {
             TH1D *hist0nu=(TH1D*)f->Get(name0nu.c_str());
@@ -208,13 +209,15 @@ double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desired
 //  TH1D *high2nu = (TH1D*)hist2nu->Clone();
 
   double lowExposure=1000;
-  double highExposure=50000;
+  double highExposure=200000;
   double low2nuEvents=Get2nuEventsForExposure(lowExposure, isotope);
   double high2nuEvents=Get2nuEventsForExposure(highExposure, isotope);
   
 //  double low0nuEvents=Get0nuEventsForExposure(lowExposure, isotope, desiredHalflife);
 //  double high0nuEvents=Get0nuEventsForExposure(highExposure, isotope, desiredHalflife);
-  
+//  double low0nuExpectedEvents=100000000;
+//  double high0nuExpectedEvents=0;
+
   double this2nuEvents=0;
   double this0nuEvents=0;
   double thisExposure=0;
