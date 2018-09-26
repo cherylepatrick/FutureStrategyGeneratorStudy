@@ -84,3 +84,4 @@ double Get2nuEventsForExposure(double exposure, ISOTOPE isotope);
 double Get0nuEventsForExposure(double exposure, ISOTOPE isotope, double desiredHalflife);
 double GetExposureFrom2nuEvents(double events, ISOTOPE isotope);
 int GetNextSmearing(std::vector<double> smearings, double previousSmearing);
+double GetExposureFrom0nuEvents(double events, ISOTOPE isotope, double halflife);

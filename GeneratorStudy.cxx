@@ -213,10 +213,23 @@ double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desired
   double low2nuEvents=Get2nuEventsForExposure(lowExposure, isotope);
   double high2nuEvents=Get2nuEventsForExposure(highExposure, isotope);
   
-//  double low0nuEvents=Get0nuEventsForExposure(lowExposure, isotope, desiredHalflife);
-//  double high0nuEvents=Get0nuEventsForExposure(highExposure, isotope, desiredHalflife);
-//  double low0nuExpectedEvents=100000000;
-//  double high0nuExpectedEvents=0;
+  // Get the signal event limit for those two
+  TH1D *high2nu=(TH1D*)hist2nu->Clone();
+  high2nu->Scale(high2nuEvents / TOTAL_2NU_EVENTS[isotope]);
+  double highEventLimit=ExpectedLimitSigEvts(DESIRED_CONFIDENCE, hist0nu, high2nu, high2nu );
+  
+  TH1D *low2nu=(TH1D*)hist2nu->Clone();
+  low2nu->Scale(low2nuEvents / TOTAL_2NU_EVENTS[isotope]);
+  double lowEventLimit=ExpectedLimitSigEvts(DESIRED_CONFIDENCE, hist0nu, low2nu, low2nu );
+  
+  // The signal event limits don't seem to change THAT Much with exposure, so these can give us new starting points for our search
+  lowExposure=GetExposureFrom0nuEvents(lowEventLimit, isotope, desiredHalflife) * 0.5;
+  highExposure=GetExposureFrom0nuEvents(highEventLimit, isotope, desiredHalflife) * 2.;
+  
+  low2nuEvents=Get2nuEventsForExposure(lowExposure, isotope);
+   high2nuEvents=Get2nuEventsForExposure(highExposure, isotope);
+  cout<<hist2nu->GetName()<<endl;
+  cout<<"Starting from "<<lowExposure<<" kg.years (half of "<<lowEventLimit<<" events) to "<<highExposure<<" kg.years ( twice "<<highEventLimit<<" events)"<<endl;
 
   double this2nuEvents=0;
   double this0nuEvents=0;
@@ -270,6 +283,12 @@ double GetExposureFrom2nuEvents(double events, ISOTOPE isotope)
 {
   // Inverse of the other calculation: events divided by number of atoms per kg, times decay constant
   return events / ( (AVOGADRO * 1000 / ATOMIC_MASS[isotope]) * (TMath::Log(2) / HALFLIFE2NU[isotope]) );
+}
+
+double GetExposureFrom0nuEvents(double events, ISOTOPE isotope, double halflife)
+{
+  // Inverse of the other calculation: events divided by number of atoms per kg, times decay constant
+  return events / ( (AVOGADRO * 1000 / ATOMIC_MASS[isotope]) * (TMath::Log(2) / halflife) );
 }
 
 TGraph* GetExposure(TGraph *sigevents, string compExperiment, ISOTOPE isotope, double desiredSensitivity)
