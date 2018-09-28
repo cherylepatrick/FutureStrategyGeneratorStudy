@@ -208,8 +208,8 @@ double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desired
 //  TH1D *low2nu = (TH1D*)hist2nu->Clone();
 //  TH1D *high2nu = (TH1D*)hist2nu->Clone();
 
-  double lowExposure=1000;
-  double highExposure=200000;
+  double lowExposure=500;
+  double highExposure=2000000;
   double low2nuEvents=Get2nuEventsForExposure(lowExposure, isotope);
   double high2nuEvents=Get2nuEventsForExposure(highExposure, isotope);
   
@@ -227,7 +227,7 @@ double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desired
   highExposure=GetExposureFrom0nuEvents(highEventLimit, isotope, desiredHalflife) * 2.;
   
   low2nuEvents=Get2nuEventsForExposure(lowExposure, isotope);
-   high2nuEvents=Get2nuEventsForExposure(highExposure, isotope);
+  high2nuEvents=Get2nuEventsForExposure(highExposure, isotope);
   cout<<hist2nu->GetName()<<endl;
   cout<<"Starting from "<<lowExposure<<" kg.years (half of "<<lowEventLimit<<" events) to "<<highExposure<<" kg.years ( twice "<<highEventLimit<<" events)"<<endl;
 
@@ -251,6 +251,9 @@ double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desired
     this2nu->Scale(this2nuEvents / TOTAL_2NU_EVENTS[isotope]);
     double signalEventLimit=ExpectedLimitSigEvts(DESIRED_CONFIDENCE, hist0nu, this2nu, this2nu );
     cout<<"**** Exposure "<<thisExposure<<" would have "<<this0nuEvents<<" 0nu and the limit is "<<signalEventLimit<<endl;
+    cout<<"Total 2 nu events: "<<this2nuEvents<<endl;
+    int binnumber=this2nu->FindBin(2.8);
+    cout<<"Of which "<<this2nu->Integral(binnumber,301)<<" are above 2.8MeV"<<endl;
     if (fabs(signalEventLimit - this0nuEvents) > accuracy)
     {
       // If the limit is higher than the halflife, we won't see it and we need more events
