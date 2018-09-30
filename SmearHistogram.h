@@ -41,4 +41,4 @@ string FILES0NU[2]={"/unix/nemo3/users/cpatrick/generatorstudy/se82/0nubb/Se82_0
 
 
 double Smear(double energy, double smearCoefficient);
-TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV);
+TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV,string fName="");
