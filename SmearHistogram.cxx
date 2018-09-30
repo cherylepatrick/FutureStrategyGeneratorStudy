@@ -11,7 +11,7 @@ int main(int argc, char **argv)
   
   trand = new TRandom3();
   gStyle->SetOptStat(0);
-  string helptext="First argument: Se or Nd, second argument: percent to smear by, third, input file, fourth arg: output root file";
+  string helptext="<Se or Nd> <smear percent> <2nu root file> <0nu root file> <output root file>";
   
   double smearing=0;
   ISOTOPE isotope;
@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     else if ((std::toupper(arg1[0])=='N') && (std::toupper(arg1[1])=='D'))isotope=ND150;
     else
     {
-      cout<<"First argument: Se or Nd, second argument: percent to smear by, third, input file, fourth arg: output root file"<<endl;
+      cout<<helptext<<endl;
       return 1;
     }
     
@@ -51,33 +51,48 @@ int main(int argc, char **argv)
   }
   cout<<"Smearing histograms for "<<ISOTOPE_NAME[isotope]<<" by "<<smearing<<"%"<<endl;
 
-  string inFile="";
+  string inFile2nu="";
   if (argc>3)
   {
     string arg3=argv[3];
-    cout<<"Look for input file"<<endl;
     if (arg3.find(".root") + 5 == arg3.length() && arg3.length() > 4)
     {
-      inFile=arg3;
+      inFile2nu=arg3;
       
-      cout<<"Input file is "+inFile;
+      cout<<"Input 2nufile is "<<inFile2nu<<endl;
     }
   }
-  if (inFile.length()==0)
+  if (inFile2nu.length()==0)
   {
-    cout<<"Loading from default files ";
+    cout<<"Loading 2nu from default files ";
   }
   
   
-  string filename="";
-  
+  string inFile0nu="";
   if (argc>4)
   {
     string arg4=argv[4];
     if (arg4.find(".root") + 5 == arg4.length() && arg4.length() > 4)
     {
+      inFile0nu=arg4;
+      
+      cout<<"Input 0nu file is "+inFile0nu<<endl;
+    }
+  }
+  if (inFile0nu.length()==0)
+  {
+    cout<<"Loading 0nu from default files ";
+  }
+
+  string filename="";
+  
+  if (argc>5)
+  {
+    string arg5=argv[5];
+    if (arg5.find(".root") + 5 == arg5.length() && arg5.length() > 4)
+    {
       cout<<"Saving to file ";
-      filename=arg4;
+      filename=arg5;
     }
   }
   if (filename.length()==0)
@@ -85,26 +100,23 @@ int main(int argc, char **argv)
     cout<<"Saving to default file ";
     filename = "smeared_hists_"+ISOTOPE_NAME[isotope]+".root";
   }
-  
-
-  
+  cout<<filename<<endl;
   string smeartext=Form("_%f",smearing*0.01);
   int pos=smeartext.find(".");
   if (pos>=0)
     smeartext.replace(pos,1,"_");
 
-  cout<<filename<<endl;
   // 2nubb smeared histogram
-  TH1D *hist2nu=makeSmearedHistogram(isotope, true, smearing*0.01, inFile);
+  TH1D *hist2nu=makeSmearedHistogram(isotope, true, smearing*0.01, inFile2nu);
   hist2nu->SetName(("smeared_2nu_"+ISOTOPE_NAME[isotope]+smeartext).c_str());
   TFile *f = new TFile(filename.c_str(),"UPDATE");
   hist2nu->Write("",TObject::kOverwrite);
   
   // 0nubb smeared histogram
-//  TH1D *hist0nu=makeSmearedHistogram(isotope, false, smearing*0.01);
-//  hist0nu->SetName(("smeared_0nu_"+ISOTOPE_NAME[isotope]+smeartext).c_str());
-//  f->cd();
-//  hist0nu->Write("",TObject::kOverwrite);
+  TH1D *hist0nu=makeSmearedHistogram(isotope, false, smearing*0.01, inFile0nu);
+  hist0nu->SetName(("smeared_0nu_"+ISOTOPE_NAME[isotope]+smeartext).c_str());
+  f->cd();
+  hist0nu->Write("",TObject::kOverwrite);
   f->Close();
   return 0;
 }
@@ -119,8 +131,8 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV
   TFile *f = new TFile(fName.c_str());
   TTree *tree = (TTree*) f->Get(treeName.c_str());
   double maxEnergy=Qbb[isotope];
-  TH1D *htrue = new TH1D("htrue",(ISOTOPE_LATEX[isotope]+(is2nu?" 2#nu#beta#beta":" 0#nu#beta#beta")+Form(" %.1f%% smearing",100*resolutionAt1MeV)).c_str(),300,2.1,maxEnergy*1.5);
-  TH1D *hsmeared = new TH1D("hsmeared",(ISOTOPE_LATEX[isotope]+(is2nu?" 2#nu#beta#beta":" 0#nu#beta#beta")+Form(" %.1f%% smearing",100*resolutionAt1MeV)).c_str(),300,2.1,maxEnergy*1.5);
+  TH1D *htrue = new TH1D("htrue",(ISOTOPE_LATEX[isotope]+(is2nu?" 2#nu#beta#beta":" 0#nu#beta#beta")+Form(" %.1f%% smearing",100*resolutionAt1MeV)).c_str(),500,2.1,maxEnergy*1.4);
+  TH1D *hsmeared = new TH1D("hsmeared",(ISOTOPE_LATEX[isotope]+(is2nu?" 2#nu#beta#beta":" 0#nu#beta#beta")+Form(" %.1f%% smearing",100*resolutionAt1MeV)).c_str(),500,2.1,maxEnergy*1.4);
   vector<double> *electronEnergy = 0;
   tree->SetBranchAddress("trueparticle.kinenergy", &electronEnergy);
   // Loop the entries
@@ -129,14 +141,12 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV
   for (int i=0;i<nEntries;i++)
   //for (int i=0;i<20000;i++) // Just to make it run faster
   {
-    cout<<"Loop "<<i<<endl;
     tree->GetEntry(i);
     double totalEnergy=electronEnergy->at(0)+electronEnergy->at(1);
     htrue->Fill(totalEnergy); // Do we actually want to do anything with this?
     double smeared1 = Smear(electronEnergy->at(0), resolutionAt1MeV);
     double smeared2 = Smear(electronEnergy->at(1), resolutionAt1MeV);
     hsmeared->Fill(smeared1+smeared2);
-    cout<<"total "<<electronEnergy->at(0)+electronEnergy->at(1)<<" smeared "<<smeared1+smeared2<<endl;
   }
   
   TCanvas *c = new TCanvas (("totalEnergy_"+ISOTOPE_NAME[isotope]).c_str(),("Smeared energy: "+ISOTOPE_NAME[isotope]).c_str(),900,600);
