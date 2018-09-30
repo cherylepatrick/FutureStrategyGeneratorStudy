@@ -70,7 +70,10 @@ int main(int argc, char **argv)
     graph->GetYaxis()->SetRangeUser(0,max);
     graph->GetYaxis()->SetTitleOffset(1.5);
     graph->GetXaxis()->SetTitle("Percent resolution (sigma) at 1 MeV");
-    legend->AddEntry(graph,graph->GetName(),"l");
+    string legendName = graph->GetName(); // Strip isotope prefix
+    int underscorepos = legendName.find("_");
+    legendName = legendName.substr(underscorepos + 1);
+    legend->AddEntry(graph,legendName.c_str(),"l");
     graph->SetTitle(title.c_str());
   }
   cout<<graphs.at(biggestGraph)->GetName()<<" has the biggest max: "<<max<<endl;
