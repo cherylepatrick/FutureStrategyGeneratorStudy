@@ -3,3 +3,8 @@ GeneratorStudy
 GeneratorStudy.o
 TrimTree
 TrimTree.o
+SmearHistogram
+SmearHistogram.o
+*.o
+FormatGraphs
+FormatGraphs
