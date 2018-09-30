@@ -64,7 +64,14 @@ PruningModule::process(datatools::things& workItem) {
       const mctools::simulated_data& simData = workItem.get<mctools::simulated_data>("SD");
       if (simData.has_data())
       {
-        pruned_.energy_.push_back(1);
+        mctools::simulated_data::primary_event_type primaryEvent=simData.get_primary_event ();
+        
+        for (int i=0;i<primaryEvent.get_number_of_particles();i++)// should be 2 particles for 0nubb
+        {
+          genbb::primary_particle trueParticle= primaryEvent.get_particle(i);
+          double energy=trueParticle.get_kinetic_energy();
+          pruned_.energy_.push_back(energy);
+        }
       }
   }// end try for SD bank
     catch (std::logic_error& e) {
