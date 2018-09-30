@@ -59,6 +59,7 @@ int main(int argc, char **argv)
     }
   }
   
+
   if (graphname=="" || halflife<=0)
   {
     cout<<"Usage: "<<argv[0]<<" -i <se or nd> -s <sensitivity in years> -x <experiment name> -o <outputfile>"<<endl;
@@ -70,6 +71,7 @@ int main(int argc, char **argv)
   TFile *outfile = new TFile(outputfile.c_str(),"UPDATE");
   outfile->cd();
   g->Write("",TObject::kOverwrite);
+
   return 0;
 }
 

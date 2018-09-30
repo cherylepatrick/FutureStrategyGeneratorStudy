@@ -25,18 +25,24 @@ using namespace std;
  */
 int main(int argc, char **argv)
 {
-  string fName;
-  if (argc>1)
+
+  //string fName="/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1.root";
+  if (argc <2)
   {
-    fName=argv[1];
+    cout<<"You need to specify a file to trim!"<<endl;
+    return -1;
   }
-  else
-  {
-    cout<<"Give a file to trim"<<endl;
-  }
+  
+ // string fName="/Users/cpatrick/uclnemo3/generatorstudy/nd150/run_1/Nd150_2nubb_1E6_flsim_1.root";
+  string fName=argv[1];
   
   TFile *fIn = new TFile(fName.c_str());
   TTree *tree = (TTree*) fIn->Get("SimData");
+  if (tree==0)
+  {
+    cout<<"Error: no data in a tree named SimData"<<endl;
+    return -1;
+  }
   string outname=fName.substr(0,fName.length()-5)+"_trimmed.root";
   cout<<outname<<endl;
   TFile *fOut = new TFile(outname.c_str(),"RECREATE");
