@@ -1,4 +1,3 @@
-
 GeneratorStudy
 GeneratorStudy.o
 TrimTree
@@ -7,4 +6,5 @@ SmearHistogram
 SmearHistogram.o
 *.o
 FormatGraphs
-FormatGraphs
+SmearHistogram
+PruningModule/build/*
