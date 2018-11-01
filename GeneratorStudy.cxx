@@ -225,8 +225,8 @@ double GetExposure(TH1D *hist2nu, TH1D *hist0nu, ISOTOPE isotope, double desired
   double lowEventLimit=ExpectedLimitSigEvts(DESIRED_CONFIDENCE, hist0nu, low2nu, low2nu );
   
   // The signal event limits don't seem to change THAT Much with exposure, so these can give us new starting points for our search
-  lowExposure=GetExposureFrom0nuEvents(lowEventLimit, isotope, desiredHalflife) * 0.5;
-  highExposure=GetExposureFrom0nuEvents(highEventLimit, isotope, desiredHalflife) * 2.;
+  lowExposure=GetExposureFrom0nuEvents(lowEventLimit, isotope, desiredHalflife);
+  highExposure=GetExposureFrom0nuEvents(highEventLimit, isotope, desiredHalflife);
   
   low2nuEvents=Get2nuEventsForExposure(lowExposure, isotope);
   high2nuEvents=Get2nuEventsForExposure(highExposure, isotope);
