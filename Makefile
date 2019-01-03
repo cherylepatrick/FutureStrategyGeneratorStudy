@@ -1,5 +1,5 @@
 CC=g++
-INCLUDES=-I/Users/cpatrick/brew/include
+INCLUDES=-I/Users/cpatrick/include/root
 CFLAGS=-c -g -Wall `root-config --cflags`
 LDFLAGS=`root-config --glibs` -L/Users/cpatrick/brew/lib/ -lboost_filesystem-mt -lboost_system-mt
 OBJECTS=$(SOURCES:.cc=.o)

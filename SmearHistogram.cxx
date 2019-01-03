@@ -138,8 +138,24 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV
   // Loop the entries
   int nEntries = tree->GetEntries();
   cout<<"number of entries "<<nEntries<<endl;
+  
+  // Prepare to write the smeared values to an output root file
+  string smearName=Form("_smear_%.2f.root",resolutionAt1MeV);
+  int thePos=smearName.find(".");
+  if (thePos>=0)
+    smearName.replace(thePos,1,"_");
+  string outFilename=fName;
+  outFilename.replace(outFilename.length()-5,5,smearName);
+  
+  TFile *outFile = new TFile (outFilename.c_str(),"RECREATE","Smeared data");
+  outFile->cd();
+  TTree *newTree = new TTree("SmearedData","SmearedData");
+  newTree->SetDirectory(outFile);
+  vector<double> *smearedEnergy = 0;
+  
+  newTree->Branch("smeared.kinenergy",&smearedEnergy);
   for (int i=0;i<nEntries;i++)
-  //for (int i=0;i<20000;i++) // Just to make it run faster
+  //for (int i=0;i<20;i++) // Just to make it run faster
   {
     tree->GetEntry(i);
     double totalEnergy=electronEnergy->at(0)+electronEnergy->at(1);
@@ -147,7 +163,15 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV
     double smeared1 = Smear(electronEnergy->at(0), resolutionAt1MeV);
     double smeared2 = Smear(electronEnergy->at(1), resolutionAt1MeV);
     hsmeared->Fill(smeared1+smeared2);
+    smearedEnergy->clear();
+    smearedEnergy->push_back(smeared1);
+    smearedEnergy->push_back(smeared2);
+    newTree->Fill();
   }
+  
+  outFile->cd();
+  newTree->Write();
+  outFile->Close();
   
   TCanvas *c = new TCanvas (("totalEnergy_"+ISOTOPE_NAME[isotope]).c_str(),("Smeared energy: "+ISOTOPE_NAME[isotope]).c_str(),900,600);
   htrue->Draw("HIST");
