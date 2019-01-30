@@ -140,7 +140,7 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV
   cout<<"number of entries "<<nEntries<<endl;
   
   // Prepare to write the smeared values to an output root file
-  string smearName=Form("_smear_%.2f.root",resolutionAt1MeV);
+  string smearName=Form("_smear_%.3f.root",resolutionAt1MeV);
   int thePos=smearName.find(".");
   if (thePos>=0)
     smearName.replace(thePos,1,"_");
@@ -194,6 +194,11 @@ TH1D * makeSmearedHistogram(ISOTOPE isotope, bool is2nu, double resolutionAt1MeV
   if (is2nu)title="energySmear2nu_"+ISOTOPE_NAME[isotope]+smeartext+".png";
   c->SaveAs(title.c_str());
 
+  c->SetLogy();
+  title="energySmear0nu_"+ISOTOPE_NAME[isotope]+smeartext+"_log.png";
+  if (is2nu)title="energySmear2nu_"+ISOTOPE_NAME[isotope]+smeartext+"_log.png";
+  c->SaveAs(title.c_str());
+  c->SetLogy(false);
   delete c;
   hsmeared->Sumw2();
   return hsmeared;
