@@ -8,4 +8,5 @@ SmearHistogram.o
 FormatGraphs
 SmearHistogram
 PruningModule/build/*
+nohup.out
 *~
