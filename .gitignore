@@ -1,6 +1,7 @@
 GeneratorStudy
 GeneratorStudy.o
 TrimTree
+HistogramSmeared
 TrimTree.o
 SmearHistogram
 SmearHistogram.o

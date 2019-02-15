@@ -8,11 +8,12 @@
  *  main function
  *  Arguments are <Se or Nd> <smear percent> <2 or 0 (nu)> <input root file>  <output root file> <number of bins> <min energy in MeV> <max energy in MeV>
  */
+string smearedtree="SmearedData";
 int main(int argc, char **argv)
 {
 
   gStyle->SetOptStat(0);
-  string helptext="<Se or Nd> <smear percent> <2 or 0 (nu)> <input root file>  <output root file> <number of bins> <min energy in MeV> <max energy in MeV>";
+  string helptext="<Se or Nd> <smear percent> <2 or 0 (nu)> <input ROOT file>  <output root file> <number of bins> <min energy in MeV> <max energy in MeV>";
   
   double smearing=0;
   ISOTOPE isotope;
@@ -27,6 +28,7 @@ int main(int argc, char **argv)
     else if ((std::toupper(arg1[0])=='N') && (std::toupper(arg1[1])=='D'))isotope=ND150;
     else
     {
+      cout<<"Not a valid isotope, Se or Nd"<<endl;
       cout<<helptext<<endl;
       return 1;
     }
@@ -45,16 +47,86 @@ int main(int argc, char **argv)
     }
     catch(const std::exception&)
     {
+      cout<<"Smear percentage is not a number"<<endl;
       cout<<helptext<<endl;
       return 1;
     }
   }
   else
   {
+    cout<<"Smear percentage needed e.g. 3.5 "<<endl;
     cout<<helptext<<endl;
     return 1;
   }
   
-  cout<<"Smearing histograms for "<<ISOTOPE_NAME[isotope]<<" by "<<smearing<<"%"<<endl;
+  bool is2nu=true;
+  
+  if (argc>3)
+  {
+    string arg3=argv[3];
+    if (arg3=="0") is2nu=false;
+    else if (arg3=="2") is2nu=true;
+    else
+    {
+      cout<<"2 or 0 needed for number of neutrinos"<<endl;
+      cout<<helptext<<endl;
+      return 1;
+    }
+  }
+  else
+  {
+    cout<<"Number of neutrinos needed - 2 or 0"<<endl;
+    cout<<helptext<<endl;
+    return 1;
+  }
+  
+  cout<<"Smearing "<<(is2nu?"2":"0")<<"nubb histograms for "<<ISOTOPE_NAME[isotope]<<" by "<<smearing<<"%"<<endl;
+  
+  string inFileName="";
+  bool inFileOK=false;
+  TFile *inFile;
+  TTree *tree ;
+  if (argc>4)
+  {
+    inFileOK=true; // Until proven otherwise!
+    string arg4=argv[4];
+    if (arg4.find(".root") + 5 == arg4.length() && arg4.length() > 4)
+    {
+      inFileName=arg4;
+      try{
+        inFile = new TFile(inFileName.c_str());
+        if (inFile->IsZombie())
+        {
+          inFileOK=false;
+        }
+        else{
+          tree = (TTree*) inFile->Get(smearedtree.c_str());
+          if (tree->IsZombie())
+          {
+            inFileOK=false;
+            cout<<"No tree named "<<smearedtree<<" in "<<inFileName<<endl;
+          }
+        }
+      }
+      catch (const std::exception&)
+      {
+        cout<<"Could not open "<<inFileName<<endl;
+        inFileOK=false;
+      }
+
+    }
+    else
+    {
+      inFileOK=false;
+    }
+
+  }
+  if (!inFileOK)
+  {
+    cout<<"Invalid input ROOT file "<<inFileName<<endl;
+    cout<<helptext<<endl;
+    return 1;
+  }
+  cout<<"inFile "<<inFileName<<" is ok? "<<inFileOK<<endl;
 }
 
