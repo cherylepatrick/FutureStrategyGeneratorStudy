@@ -100,11 +100,26 @@ int main(int argc, char **argv)
           inFileOK=false;
         }
         else{
-          tree = (TTree*) inFile->Get(smearedtree.c_str());
-          if (tree->IsZombie())
+          try{
+            if (! inFile->GetListOfKeys()->Contains(smearedtree.c_str()))
+                  {
+                    cout<<"No tree named "<<smearedtree<<" in "<<inFileName<<endl;
+                    inFileOK=false;
+                  }
+                else
+                {
+                  tree = (TTree*) inFile->Get(smearedtree.c_str());
+                  if (tree->IsZombie())
+                  {
+                    inFileOK=false;
+                    cout<<"No tree named "<<smearedtree<<" in "<<inFileName<<endl;
+                  }
+                }
+          }
+          catch(const std::exception&)
           {
-            inFileOK=false;
             cout<<"No tree named "<<smearedtree<<" in "<<inFileName<<endl;
+            inFileOK=false;
           }
         }
       }
@@ -121,6 +136,7 @@ int main(int argc, char **argv)
     }
 
   }
+  
   if (!inFileOK)
   {
     cout<<"Invalid input ROOT file "<<inFileName<<endl;

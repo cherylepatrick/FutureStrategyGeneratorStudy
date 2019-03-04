@@ -1,6 +1,7 @@
 CC=g++
+INCLUDES=-I/Users/cpatrick/include/root
 CFLAGS=-c -g -Wall `root-config --cflags`
-LDFLAGS=`root-config --glibs` -L/Users/cpatrick/CadfaelBrew/lib/ -lboost_filesystem-mt -lboost_system-mt
+LDFLAGS=`root-config --glibs` -L/Users/cpatrick/brew/lib/ -lboost_filesystem-mt -lboost_system-mt
 OBJECTS=$(SOURCES:.cc=.o)
 
 # make a binary for every .cxx file
