@@ -10,7 +10,5 @@ FormatGraphs
 PruningModule/build/*
 nohup.out
 *~
-Makefile
-HostogramSmeared
 HistogramSmeared
 Makefile
